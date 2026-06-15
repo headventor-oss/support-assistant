@@ -1,4 +1,4 @@
-import { getOpenAI, OPENAI_MODEL } from "./openai";
+import { getOpenAI, OPENAI_MODEL } from "./openai.js";
 
 export interface IssueRecord {
   issue: string;

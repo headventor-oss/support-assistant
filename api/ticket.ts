@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getOpenAI, OPENAI_MODEL } from "./_lib/openai";
+import { getOpenAI, OPENAI_MODEL } from "./_lib/openai.js";
 
 interface ChatMessage {
   role: "user" | "assistant";

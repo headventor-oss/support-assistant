@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getPool } from "./_lib/db";
-import { generateAnalysis, type IssueRecord } from "./_lib/analyze";
+import { getPool } from "./_lib/db.js";
+import { generateAnalysis, type IssueRecord } from "./_lib/analyze.js";
 
 interface AnalysisEntryRow {
   question: string;
