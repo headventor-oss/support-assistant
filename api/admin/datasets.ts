@@ -1,6 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getPool } from "../_lib/db";
-import { generateAnalysis, type IssueRecord } from "../_lib/analyze";
 
 interface SaveDatasetBody {
   name: string;
@@ -100,54 +99,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
       const datasetId = datasetResult.rows[0].id;
 
-      for (const row of body.rows) {
-        const question = row[body.questionCol];
-        const answer = row[body.answerCol];
-        if (question == null || answer == null || String(question).trim() === "") continue;
-        await client.query(
-          `INSERT INTO qa_entries
-             (dataset_id, question, answer, category, issue_date, issue_type, status, resolution_date, eta)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-          [
+      // Build the value tuples once, then insert in batches (one round trip per
+      // batch instead of one per row — far faster and safe within serverless limits).
+      const COLS = 9;
+      const validRows = body.rows.filter((row) => {
+        const q = row[body.questionCol];
+        const a = row[body.answerCol];
+        return q != null && a != null && String(q).trim() !== "";
+      });
+
+      const BATCH = 200;
+      for (let start = 0; start < validRows.length; start += BATCH) {
+        const chunk = validRows.slice(start, start + BATCH);
+        const values: unknown[] = [];
+        const placeholders = chunk.map((row, i) => {
+          const base = i * COLS;
+          values.push(
             datasetId,
-            String(question),
-            String(answer),
+            String(row[body.questionCol]),
+            String(row[body.answerCol]),
             cell(row, body.categoryCol),
             cell(row, body.dateCol),
             cell(row, body.typeCol),
             cell(row, body.statusCol),
             cell(row, body.resolutionDateCol),
-            cell(row, body.etaCol),
-          ]
+            cell(row, body.etaCol)
+          );
+          const ph = Array.from({ length: COLS }, (_, j) => `$${base + j + 1}`);
+          return `(${ph.join(", ")})`;
+        });
+
+        await client.query(
+          `INSERT INTO qa_entries
+             (dataset_id, question, answer, category, issue_date, issue_type, status, resolution_date, eta)
+           VALUES ${placeholders.join(", ")}`,
+          values
         );
       }
 
       await client.query("COMMIT");
 
-      // Generate the textual analysis once, now, and store it on the dataset.
-      const records: IssueRecord[] = body.rows
-        .filter((row) => {
-          const q = row[body.questionCol];
-          const a = row[body.answerCol];
-          return q != null && a != null && String(q).trim() !== "";
-        })
-        .map((row) => ({
-          issue: String(row[body.questionCol]),
-          resolution: String(row[body.answerCol]),
-          category: cell(row, body.categoryCol),
-          type: cell(row, body.typeCol),
-          status: cell(row, body.statusCol),
-        }));
-
-      const analysis = await generateAnalysis(records);
-      if (analysis) {
-        await pool.query("UPDATE datasets SET analysis = $1 WHERE id = $2", [
-          JSON.stringify(analysis),
-          datasetId,
-        ]);
-      }
-
-      return res.status(200).json({ id: datasetId, analysis });
+      // The textual analysis (an OpenAI call) is generated lazily on first view of
+      // the Analysis tab and cached, so the upload itself stays fast.
+      return res.status(200).json({ id: datasetId });
     } catch (err) {
       await client.query("ROLLBACK");
       console.error(err);

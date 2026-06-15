@@ -1,7 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getPool } from "./_lib/db";
+import { generateAnalysis, type IssueRecord } from "./_lib/analyze";
 
 interface AnalysisEntryRow {
+  question: string;
+  answer: string;
   category: string | null;
   issue_type: string | null;
   status: string | null;
@@ -41,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const result = await pool.query<AnalysisEntryRow>(
-    `SELECT category, issue_type, status, issue_date, resolution_date, eta
+    `SELECT question, answer, category, issue_type, status, issue_date, resolution_date, eta
      FROM qa_entries WHERE dataset_id = $1`,
     [datasetId]
   );
@@ -56,6 +59,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }));
 
   const hasAnalytics = entries.some((e) => e.issueDate || e.type || e.status);
+
+  // Generate the textual analysis once (lazily, on first view) and cache it.
+  if (!analysis && result.rows.length > 0) {
+    const records: IssueRecord[] = result.rows.map((r) => ({
+      issue: r.question,
+      resolution: r.answer,
+      category: r.category,
+      type: r.issue_type,
+      status: r.status,
+    }));
+    analysis = await generateAnalysis(records);
+    if (analysis) {
+      await pool.query("UPDATE datasets SET analysis = $1 WHERE id = $2", [
+        JSON.stringify(analysis),
+        datasetId,
+      ]);
+    }
+  }
 
   return res.status(200).json({ hasActive: true, datasetName, hasAnalytics, analysis, entries });
 }
