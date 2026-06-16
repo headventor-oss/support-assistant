@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import ChatPage from "./pages/ChatPage";
 import { MenuIcon } from "./components/icons";
+import FusoLogo from "./components/FusoLogo";
 import { useConversations } from "./lib/ConversationsContext";
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
@@ -25,15 +26,23 @@ function App() {
       {sidebarOpen && <div className="sidebar-scrim" onClick={() => setSidebarOpen(false)} />}
 
       <div className="app-content">
-        <button
-          type="button"
-          className="mobile-menu-btn"
-          onClick={() => setSidebarOpen((v) => !v)}
-          aria-label="Toggle menu"
-        >
-          <MenuIcon className="icon-sm" />
-        </button>
+        <header className="topbar">
+          <div className="topbar-left">
+            <button
+              type="button"
+              className="mobile-menu-btn"
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-label="Toggle menu"
+            >
+              <MenuIcon className="icon-sm" />
+            </button>
+          </div>
+          <div className="topbar-right">
+            <FusoLogo className="fuso-logo" />
+          </div>
+        </header>
 
+        <div className="app-body">
         <Routes>
           <Route path="/" element={<ChatPage />} />
           <Route
@@ -53,6 +62,7 @@ function App() {
             }
           />
         </Routes>
+        </div>
       </div>
     </div>
   );
