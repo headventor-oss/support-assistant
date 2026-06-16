@@ -21,6 +21,9 @@
   --error: #ef4444;
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --topbar-bg: rgba(13, 13, 19, 0.6);
+  --scroll-thumb: rgba(255, 255, 255, 0.12);
+  --scroll-thumb-hover: rgba(255, 255, 255, 0.2);
   --radius: 14px;
   --sidebar-w: 264px;
   --sans: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Inter",
@@ -33,6 +36,34 @@
   color-scheme: dark;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root[data-theme="light"] {
+  --bg: #f5f6f9;
+  --bg-1: #ffffff;
+  --bg-2: #eef0f4;
+  --bg-3: #e3e6ec;
+  --sidebar-bg: #f0f2f6;
+  --text: #14151a;
+  --text-soft: rgba(0, 0, 0, 0.74);
+  --text-muted: rgba(0, 0, 0, 0.5);
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.16);
+  --accent: #0a6cff;
+  --accent-2: #6d4bf0;
+  --accent-soft: rgba(10, 108, 255, 0.1);
+  --accent-glow: rgba(10, 108, 255, 0.18);
+  --card-bg: #ffffff;
+  --user-bubble: #eef1f7;
+  --success: #15803d;
+  --success-soft: rgba(21, 128, 61, 0.12);
+  --error: #dc2626;
+  --shadow-sm: 0 1px 2px rgba(20, 21, 26, 0.06);
+  --shadow-lg: 0 16px 48px rgba(20, 21, 26, 0.16);
+  --topbar-bg: rgba(255, 255, 255, 0.72);
+  --scroll-thumb: rgba(0, 0, 0, 0.18);
+  --scroll-thumb-hover: rgba(0, 0, 0, 0.3);
+  color-scheme: light;
 }
 
 * {
@@ -68,13 +99,13 @@ button {
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--scroll-thumb);
   border-radius: 8px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--scroll-thumb-hover);
   background-clip: padding-box;
 }
 
@@ -108,7 +139,7 @@ button {
   min-height: 56px;
   padding: 8px 22px;
   border-bottom: 1px solid var(--border);
-  background: rgba(13, 13, 19, 0.6);
+  background: var(--topbar-bg);
   backdrop-filter: blur(8px);
 }
 
@@ -116,7 +147,27 @@ button {
 .topbar-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border-strong);
+  background: var(--card-bg);
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .fuso-logo {

@@ -2,9 +2,10 @@ import { Suspense, lazy, useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import ChatPage from "./pages/ChatPage";
-import { MenuIcon } from "./components/icons";
+import { MenuIcon, MoonIcon, SunIcon } from "./components/icons";
 import FusoLogo from "./components/FusoLogo";
 import { useConversations } from "./lib/ConversationsContext";
+import { useTheme } from "./lib/ThemeContext";
 
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const AnalysisPage = lazy(() => import("./pages/AnalysisPage"));
@@ -12,6 +13,7 @@ const AnalysisPage = lazy(() => import("./pages/AnalysisPage"));
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { startNewChat } = useConversations();
+  const { theme, toggle } = useTheme();
   const navigate = useNavigate();
 
   function handleNewChat() {
@@ -38,6 +40,15 @@ function App() {
             </button>
           </div>
           <div className="topbar-right">
+            <button
+              type="button"
+              className="theme-toggle"
+              onClick={toggle}
+              aria-label={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+              title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
+            >
+              {theme === "dark" ? <SunIcon className="icon-sm" /> : <MoonIcon className="icon-sm" />}
+            </button>
             <FusoLogo className="fuso-logo" />
           </div>
         </header>

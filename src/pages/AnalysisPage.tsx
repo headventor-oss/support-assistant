@@ -16,6 +16,7 @@ import {
   YAxis,
 } from "recharts";
 import { fetchAnalysis } from "../lib/api";
+import { useTheme } from "../lib/ThemeContext";
 import type { AnalysisEntry, AnalysisInsights, AnalysisResponse } from "../lib/types";
 
 type Range = "week" | "month" | "year";
@@ -42,14 +43,6 @@ const STATUS_COLORS: Record<string, string> = {
 
 const DONE_STATUSES = new Set(["resolved", "closed"]);
 
-const TOOLTIP_STYLE = {
-  background: "#12121a",
-  border: "1px solid rgba(255,255,255,0.12)",
-  borderRadius: 10,
-  color: "#fafafa",
-  fontSize: 13,
-};
-
 function parseISO(s: string | null): Date | null {
   if (!s) return null;
   const d = new Date(`${s.slice(0, 10)}T00:00:00Z`);
@@ -72,6 +65,20 @@ interface TrendPoint {
 }
 
 export default function AnalysisPage() {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+  const axisColor = dark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.55)";
+  const axisColorStrong = dark ? "rgba(255,255,255,0.72)" : "rgba(0,0,0,0.75)";
+  const gridLine = dark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)";
+  const cellStroke = dark ? "#0b0b10" : "#ffffff";
+  const tooltipStyle = {
+    background: dark ? "#12121a" : "#ffffff",
+    border: `1px solid ${dark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}`,
+    borderRadius: 10,
+    color: dark ? "#fafafa" : "#14151a",
+    fontSize: 13,
+  };
+
   const [data, setData] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -230,9 +237,9 @@ export default function AnalysisPage() {
                       <stop offset="100%" stopColor="#2997ff" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <XAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} tickLine={false} axisLine={false} />
-                  <YAxis allowDecimals={false} tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} tickLine={false} axisLine={false} width={36} />
-                  <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ stroke: "rgba(255,255,255,0.1)" }} />
+                  <XAxis dataKey="label" tick={{ fill: axisColor, fontSize: 12 }} tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: axisColor, fontSize: 12 }} tickLine={false} axisLine={false} width={36} />
+                  <Tooltip contentStyle={tooltipStyle} cursor={{ stroke: gridLine }} />
                   <Legend wrapperStyle={{ fontSize: 13 }} />
                   <Area type="monotone" dataKey="raised" name="Raised" stroke="#2997ff" strokeWidth={2} fill="url(#raisedGrad)" />
                   <Line type="monotone" dataKey="resolved" name="Resolved" stroke="#10b981" strokeWidth={2} dot={false} />
@@ -245,9 +252,9 @@ export default function AnalysisPage() {
                 <h2>Issues by category</h2>
                 <ResponsiveContainer width="100%" height={Math.max(220, byCategory.length * 34)}>
                   <BarChart data={byCategory} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
-                    <XAxis type="number" allowDecimals={false} tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <YAxis type="category" dataKey="name" width={130} tick={{ fill: "rgba(255,255,255,0.72)", fontSize: 12 }} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fill: axisColor, fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <YAxis type="category" dataKey="name" width={130} tick={{ fill: axisColorStrong, fontSize: 12 }} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={tooltipStyle} cursor={{ fill: gridLine }} />
                     <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={18}>
                       {byCategory.map((_, i) => (
                         <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -263,10 +270,10 @@ export default function AnalysisPage() {
                   <PieChart>
                     <Pie data={byType} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
                       {byType.map((_, i) => (
-                        <Cell key={i} fill={COLORS[i % COLORS.length]} stroke="#0b0b10" strokeWidth={2} />
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} stroke={cellStroke} strokeWidth={2} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
@@ -280,10 +287,10 @@ export default function AnalysisPage() {
                   <PieChart>
                     <Pie data={byStatus} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
                       {byStatus.map((s, i) => (
-                        <Cell key={i} fill={STATUS_COLORS[s.name] ?? COLORS[i % COLORS.length]} stroke="#0b0b10" strokeWidth={2} />
+                        <Cell key={i} fill={STATUS_COLORS[s.name] ?? COLORS[i % COLORS.length]} stroke={cellStroke} strokeWidth={2} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={TOOLTIP_STYLE} />
+                    <Tooltip contentStyle={tooltipStyle} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                   </PieChart>
                 </ResponsiveContainer>
